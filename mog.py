@@ -22,13 +22,14 @@ class MOG:
         self.w0 = None
         self.train_accuracy = None
 
-    def learn(self, full_dataset, verbose=False, report_acc=False):
+    def learn(self, full_dataset, report_acc=False):
 
         self.N1 = 0
         self.N2 = 0
         self.pi1 = 0.0
         self.mu1 = np.zeros((self.M, 1), dtype=float)
         self.mu2 = np.zeros((self.M, 1), dtype=float)
+
         for train_set_attrs, train_set_labels in full_dataset:
 
             if len(train_set_attrs) != len(train_set_labels):
@@ -55,6 +56,7 @@ class MOG:
 
         self.S1 = np.zeros((self.M, self.M), dtype=float)
         self.S2 = np.zeros((self.M, self.M), dtype=float)
+
         for train_set_attrs, train_set_labels in full_dataset:
             for i, row in train_set_attrs.iterrows():
 
@@ -79,24 +81,6 @@ class MOG:
             self.train_accuracy = self.k_fold_cross_validation(full_dataset)
             print('Training Accuracy = %.2f %%' % self.train_accuracy)
 
-        '''
-        print('pi1 =', self.pi1, 'pi2 =', self.pi2)
-        print('mu1 shape =', self.mu1.shape)
-        print(self.mu1)
-        print('mu2 shape =', self.mu2.shape)
-        print(self.mu2)
-        print('S1 shape =', self.S1.shape)
-        print(self.S1)
-        print('S2 shape =', self.S2.shape)
-        print(self.S2)
-        print('Sigma shape =', self.sigma.shape)
-        print(self.sigma)
-        print('w shape =', self.w.shape)
-        print(self.w)
-        print('w0 shape =', self.w0.shape)
-        print('w0 =', self.w0)
-        '''
-
     def sigmoid(self, x):
         power = -1 * np.add(np.matmul(np.transpose(self.w), x), self.w0)
         return 1 / (1 + np.exp(power))
@@ -108,7 +92,7 @@ class MOG:
             if yi == y:
                 return label
 
-    def classify(self, test_attrs, true_labels=None):
+    def classify(self, test_attrs, true_labels=None, verbose=False):
 
         N = len(test_attrs)
         if not true_labels.empty:
@@ -123,7 +107,10 @@ class MOG:
             predicted_labels.append(predicted_label)
             if not true_labels.empty:
                 true_label = true_labels.iat[i, 0]
-                #print('Predicted Label =', predicted_label, 'True Label =', true_label)
+
+                if verbose:
+                    print('Predicted Label =', predicted_label, 'True Label =', true_label)
+
                 if predicted_label == true_label:
                     correct += 1
 
