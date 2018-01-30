@@ -2,6 +2,7 @@ from data_loader import DataLoader
 import numpy as np
 import pandas as pd
 import math
+import pprint
 
 
 class MOG:
@@ -79,7 +80,7 @@ class MOG:
 
         if report_acc:
             self.train_accuracy = self.k_fold_cross_validation(full_dataset)
-            print('Training Accuracy = %.2f %%' % self.train_accuracy)
+            print('Training Accuracy = %.3f %%' % self.train_accuracy)
 
     def sigmoid(self, x):
         power = -1 * np.add(np.matmul(np.transpose(self.w), x), self.w0)
@@ -122,30 +123,40 @@ class MOG:
         return predicted_labels, accuracy
 
     def k_fold_cross_validation(self, full_dataset, k=10):
+        cv_test_model = MOG(M=self.M)
         avg_accuracy = 0.0
         for i in range(k):
             test_attrs, test_labels = full_dataset.pop(0)
-            accuracy = self.classify(test_attrs, true_labels=test_labels)[1]
+            cv_test_model.learn(full_dataset)
+            accuracy = cv_test_model.classify(test_attrs, true_labels=test_labels)[1]
             full_dataset.append((test_attrs, test_labels))
             avg_accuracy += accuracy
-        return avg_accuracy / k
+        self.train_accuracy = avg_accuracy / k
+        return self.train_accuracy
+
+    def summary(self):
+        print('=====Model Summary=====')
+        print('Class 1 label = 5.0')
+        print('Class 2 label = 6.0')
+        print('Pi =', self.pi1)
+        print('\nMu1 of size', end=' ')
+        print(self.mu1.shape, ':')
+        pprint.pprint(self.mu1)
+        print('\nMu2 of size', end=' ')
+        print(self.mu2.shape, ':')
+        pprint.pprint(self.mu2)
+        print('\nSigma of size', end=' ')
+        print(self.sigma.shape, ':')
+        for i in range(self.sigma.shape[0]):
+            pprint.pprint(self.sigma[i])
+        if self.train_accuracy:
+            print('\nTraining Accuracy = %.3f %%' % self.train_accuracy)
 
 
 if __name__ == '__main__':
     full_dataset = DataLoader.load_full_dataset('./dataset')
     model = MOG(M=64)
     model.learn(full_dataset, report_acc=True)
-
-    # Test the model with test data taken from training data
-    train_dataset, test_attrs, test_labels = DataLoader.load_with_test_data(
-        './dataset',
-        split_ratio=0.1)
-    model = MOG(M=64)
-    model.learn(train_dataset, report_acc=True)
-    predictions, acc = model.classify(test_attrs, true_labels=test_labels)
-
-    print('Test Accuracy = %.2f %%' % acc)
-    print('=====Predictions=====')
-    print(predictions)
+    model.summary()
 
 
